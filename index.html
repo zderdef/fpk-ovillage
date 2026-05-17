@@ -66,6 +66,9 @@ nav{background:var(--w);border-bottom:1px solid var(--bd);padding:0 20px;display
 .bk{background:none;border:none;color:var(--t2);cursor:pointer;font-size:13px;font-weight:600;padding:0;margin-bottom:12px;}
 .ts{background:var(--w);border:1px solid var(--bd);border-radius:12px;padding:13px 15px;margin-bottom:13px;}
 .tr{display:flex;justify-content:space-between;font-size:12px;font-weight:600;margin-bottom:4px;color:var(--t2);}
+/* DELETE MANAGER PANEL */
+.del-panel{background:#FFF5F5;border:1.5px solid #FCA5A5;border-radius:13px;padding:14px 16px;margin-bottom:14px;}
+.del-item{display:flex;align-items:center;gap:10px;padding:8px 10px;background:#fff;border-radius:9px;margin-top:7px;border:1px solid var(--bd);}
 footer{text-align:center;padding:20px;font-size:10px;color:var(--t3);letter-spacing:.05em;margin-top:8px;}
 @media(max-width:640px){.kg{grid-template-columns:repeat(2,1fr);}.cg{grid-template-columns:1fr;}}
 </style>
@@ -80,16 +83,16 @@ footer{text-align:center;padding:20px;font-size:10px;color:var(--t3);letter-spac
     <div style="font-size:13px;color:#6B7280;margin-top:6px;margin-bottom:28px;font-weight:500;">Accès réservé — Entrez le mot de passe</div>
     <input id="pass-inp" type="password" placeholder="Mot de passe..." style="width:100%;box-sizing:border-box;border:1.5px solid #E5E7EB;border-radius:10px;padding:12px 16px;font-size:15px;outline:none;color:#111827;margin-bottom:10px;text-align:center;letter-spacing:0.1em;">
     <div id="pass-err" style="display:none;font-size:12px;color:#EF4444;font-weight:600;margin-bottom:10px;">❌ Mot de passe incorrect</div>
-    <button onclick="checkPass()" style="width:100%;background:#6C63FF;color:#fff;border:none;border-radius:10px;padding:13px;font-weight:800;font-size:15px;cursor:pointer;letter-spacing:0.03em;">ACCÉDER →</button>
-    <div style="font-size:10px;color:#9CA3AF;margin-top:20px;letter-spacing:0.05em;">FPK O'VILLAGE © 2025 · Système de gestion interne</div>
+    <button onclick="checkPass()" style="width:100%;background:#6C63FF;color:#fff;border:none;border-radius:10px;padding:13px;font-weight:800;font-size:15px;cursor:pointer;">ACCÉDER →</button>
+    <div style="font-size:10px;color:#9CA3AF;margin-top:20px;">FPK O'VILLAGE © 2025 · Système de gestion interne</div>
   </div>
 </div>
 
 <!-- MAIN APP -->
 <div id="app-wrap" style="display:none;">
-
 <nav>
   <div class="logo">FPK <span>O'VILLAGE</span></div>
+  <button class="nbtn" style="background:#FEE2E2;color:#EF4444;border:1px solid #FCA5A5;" onclick="openModal('manageData')">🗑️ Gérer</button>
   <button class="nbtn" style="background:var(--p);color:#fff" onclick="openModal('addCoach')">+ Coach</button>
   <div class="mav">AC</div>
 </nav>
@@ -110,6 +113,58 @@ footer{text-align:center;padding:20px;font-size:10px;color:var(--t3);letter-spac
 </div><!-- end app-wrap -->
 
 <script>
+// ── PASSWORD ──
+const PASS = "PTovillage";
+function checkPass(){
+  const v=document.getElementById('pass-inp').value;
+  if(v===PASS){
+    document.getElementById('gate').style.display='none';
+    document.getElementById('app-wrap').style.display='block';
+    localStorage.setItem('fpk_auth',PASS);
+    renderDash();
+  } else {
+    const err=document.getElementById('pass-err');
+    err.style.display='block';
+    document.getElementById('pass-inp').style.borderColor='#EF4444';
+    setTimeout(()=>{err.style.display='none';document.getElementById('pass-inp').style.borderColor='#E5E7EB';},2500);
+  }
+}
+document.getElementById('pass-inp').addEventListener('keydown',e=>{if(e.key==='Enter')checkPass();});
+if(localStorage.getItem('fpk_auth')===PASS){
+  document.getElementById('gate').style.display='none';
+  document.getElementById('app-wrap').style.display='block';
+}
+
+// ── PERSISTENCE: save & load from localStorage ──
+const STORE_KEY = 'fpk_data';
+const DEFAULT_COACHES = [
+  {id:1,name:"Hassan",av:"HA",color:"#6C63FF",photo:null},
+  {id:2,name:"Sanae", av:"SA",color:"#10B981",photo:null},
+  {id:3,name:"Salah", av:"SL",color:"#EF4444",photo:null},
+  {id:4,name:"Jamal", av:"JA",color:"#F59E0B",photo:null}
+];
+const DEFAULT_TARGETS = {1:50000,2:50000,3:50000,4:50000};
+
+function loadData(){
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if(raw){
+      const d = JSON.parse(raw);
+      coaches  = d.coaches  || DEFAULT_COACHES;
+      clients  = d.clients  || [];
+      targets  = d.targets  || DEFAULT_TARGETS;
+      nid      = d.nid      || 300;
+    }
+  } catch(e){ console.warn('Load failed',e); }
+}
+
+function saveData(){
+  try {
+    localStorage.setItem(STORE_KEY, JSON.stringify({coaches, clients, targets, nid}));
+  } catch(e){ console.warn('Save failed',e); }
+}
+
+// ── DATA ──
 const CARNETS={c1:{name:"1 séance PT",sessions:1,price:300,type:"SOLO"},c2:{name:"10 séances PT",sessions:10,price:2000,type:"SOLO"},c3:{name:"10 séances DUO PT",sessions:10,price:3000,type:"DUO"},c4:{name:"10 séances DUO Premium",sessions:10,price:4500,type:"DUO"},c5:{name:"10 séances Fight",sessions:10,price:2500,type:"FIGHT"},c6:{name:"10 séances Premium",sessions:10,price:3000,type:"PREMIUM"},c7:{name:"10 séances Premium+",sessions:10,price:4000,type:"PREMIUM"},c8:{name:"15 séances PT+1",sessions:16,price:3000,type:"SOLO"},c9:{name:"15 séances DUO Prem.",sessions:15,price:6500,type:"DUO"},c10:{name:"15 séances Premium",sessions:15,price:4500,type:"PREMIUM"},c11:{name:"15 séances DUO",sessions:15,price:4500,type:"DUO"},c12:{name:"20 séances PT+2",sessions:22,price:4000,type:"SOLO"},c13:{name:"20 séances DUO Prem.",sessions:20,price:7500,type:"DUO"},c14:{name:"20 séances Premium",sessions:20,price:6000,type:"PREMIUM"},c15:{name:"20 séances DUO",sessions:20,price:6000,type:"DUO"},c16:{name:"Small Groupe",sessions:1,price:750,type:"GROUPE"}};
 const TC={SOLO:"#6C63FF",DUO:"#10B981",FIGHT:"#EF4444",PREMIUM:"#F59E0B",GROUPE:"#3B82F6"};
 const FD=["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"];
@@ -118,9 +173,9 @@ const HOURS=Array.from({length:18},(_,i)=>`${(i+6).toString().padStart(2,'0')}:0
 const CC=["#6C63FF","#10B981","#EF4444","#F59E0B","#3B82F6","#EC4899","#14B8A6"];
 const RT=3;
 let nid=300,photoData=null,selColor=CC[0],activeCoachId=null;
-let coaches=[{id:1,name:"Hassan",av:"HA",color:"#6C63FF",photo:null},{id:2,name:"Sanae",av:"SA",color:"#10B981",photo:null},{id:3,name:"Salah",av:"SL",color:"#EF4444",photo:null},{id:4,name:"Jamal",av:"JA",color:"#F59E0B",photo:null}];
-let clients=[],targets={1:50000,2:50000,3:50000,4:50000};
-let calDate={},calMonth={};
+let coaches=[...DEFAULT_COACHES], clients=[], targets={...DEFAULT_TARGETS};
+
+loadData(); // ← load saved data on startup
 
 const t2s=d=>`${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")}/${d.getFullYear()}`;
 const s2d=s=>{const[dd,mm,yy]=s.split("/");return new Date(+yy,+mm-1,+dd);};
@@ -166,6 +221,7 @@ function rnBanner(rens){
 }
 
 // CALENDAR
+let calDate={},calMonth={};
 function calHTML(id,value,accent){
   const d=value?s2d(value):today();
   if(!calMonth[id])calMonth[id]={y:d.getFullYear(),m:d.getMonth()};
@@ -290,8 +346,37 @@ function openModal(type,coachId,clientId){
     <button class="sbtn" style="background:${tc};color:#fff" onclick="submitTarget(${coachId})">Enregistrer</button>`;
   }
 
+  else if(type==='manageData'){
+    headTxt='🗑️ Gérer / Supprimer';headColor="#EF4444";
+    body=`
+    <div style="font-size:12px;color:var(--t2);margin-bottom:4px;font-weight:600">COACHES (cliquer pour supprimer)</div>
+    <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:16px">
+      ${coaches.map(co=>`<div class="del-item">
+        ${avEl(co.av,co.color,36,co.photo)}
+        <div style="flex:1;font-weight:600">${co.name} <span style="font-size:11px;color:var(--t3);font-weight:400">— ${clients.filter(c=>c.coachId===co.id).length} client(s)</span></div>
+        <button onclick="delCoach(${co.id})" style="background:#FEE2E2;border:1px solid #FCA5A5;border-radius:7px;padding:5px 10px;color:#EF4444;font-weight:700;font-size:12px;cursor:pointer;">Supprimer</button>
+      </div>`).join('')}
+    </div>
+    <div style="font-size:12px;color:var(--t2);margin-bottom:4px;font-weight:600">CLIENTS (cliquer pour supprimer)</div>
+    <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:16px">
+      ${clients.length===0?`<div style="color:var(--t3);font-size:13px;padding:8px">Aucun client enregistré</div>`:clients.map(cl=>{
+        const co=coaches.find(c=>c.id===cl.coachId);
+        const ini=cl.name.split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase();
+        const tc2=TC[CARNETS[cl.carnetId]?.type]||"#888";
+        return`<div class="del-item">
+          ${avEl(ini,tc2,36,cl.photo||null)}
+          <div style="flex:1"><div style="font-weight:600;font-size:13px">${cl.name}</div><div style="font-size:11px;color:var(--t3)">Coach ${co?.name||'?'}</div></div>
+          <button onclick="delClient(${cl.id},true)" style="background:#FEE2E2;border:1px solid #FCA5A5;border-radius:7px;padding:5px 10px;color:#EF4444;font-weight:700;font-size:12px;cursor:pointer;">Supprimer</button>
+        </div>`;}).join('')}
+    </div>
+    <div style="border-top:1px solid var(--bd);padding-top:14px;margin-top:4px">
+      <div style="font-size:12px;color:#EF4444;font-weight:700;margin-bottom:8px">⚠️ ZONE DANGER</div>
+      <button onclick="resetAll()" style="width:100%;background:#FEE2E2;border:1.5px solid #FCA5A5;border-radius:9px;padding:11px;color:#DC2626;font-weight:700;font-size:13px;cursor:pointer;">🗑️ Tout réinitialiser (coaches + clients)</button>
+    </div>`;
+  }
+
   root.innerHTML=`<div class="mbg" onclick="if(event.target===this)closeModal()">
-    <div class="modal" style="border:1.5px solid ${tc}33">
+    <div class="modal" style="border:1.5px solid ${headColor}33">
       <div class="mh"><span style="font-weight:700;font-size:15px;color:${headColor}">${headTxt}</span>
         <button onclick="closeModal()" style="background:var(--bg);border:none;border-radius:7px;width:30px;height:30px;cursor:pointer;color:var(--t2);font-size:17px;font-weight:700">×</button>
       </div>
@@ -312,7 +397,6 @@ function selC(c){
   document.querySelectorAll('[id^="cc-"]').forEach(d=>d.style.border='3px solid transparent');
   const el=document.getElementById('cc-'+c.replace('#',''));if(el)el.style.border='3px solid #111';
   const av=document.getElementById('cprev-av');if(av){av.style.background=c+'33';av.style.borderColor=c+'55';av.style.color=c;}
-  const prev=document.getElementById('cprev');if(prev)prev.style.background=c+'0d';
 }
 function upCoachPrev(){
   const n=document.getElementById('nc2-n')?.value||'';
@@ -327,7 +411,7 @@ function prevCoachPhoto(){const f=document.getElementById('pi2')?.files[0];if(!f
 function submitClient(coachId){
   const name=document.getElementById('nc-n')?.value.trim();if(!name){alert('Nom requis');return;}
   clients.push({id:nid++,coachId,name,carnetId:document.getElementById('nc-c')?.value||'c2',day:document.getElementById('nc-d')?.value||'Lundi',hour:document.getElementById('nc-h')?.value||'09:00',notes:document.getElementById('nc-nt')?.value||'',payDate:calDate['nc-p']||t2s(today()),photo:photoData,sessions:[]});
-  photoData=null;closeModal();renderDetail(coachId);renderDash();
+  photoData=null;saveData();closeModal();renderDetail(coachId);renderDash();
 }
 function submitSession(coachId,clientId){
   const date=calDate['ns-d']||t2s(today());
@@ -335,20 +419,42 @@ function submitSession(coachId,clientId){
   const cl=clients.find(c=>c.id===clientId);if(!cl)return;
   const cn=CARNETS[cl.carnetId];if(cn&&cl.sessions.length>=cn.sessions)return;
   cl.sessions.push({id:nid++,date,day:dayStr,hour:document.getElementById('ns-h')?.value||'09:00',notes:document.getElementById('ns-n')?.value||''});
-  closeModal();renderDetail(coachId);renderDash();
+  saveData();closeModal();renderDetail(coachId);renderDash();
 }
 function submitCoach(){
   const name=document.getElementById('nc2-n')?.value.trim();if(!name)return;
   const id=nid++;const av=name.split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase();
   coaches.push({id,name,av,color:selColor,photo:coachPhotoData});coachPhotoData=null;
-  targets[id]=50000;closeModal();renderDash();renderCoaches();
+  targets[id]=50000;saveData();closeModal();renderDash();renderCoaches();
 }
 function submitTarget(coachId){
   targets[coachId]=Number(document.getElementById('tv')?.value||0);
-  closeModal();renderDash();if(activeCoachId===coachId)renderDetail(coachId);
+  saveData();closeModal();renderDash();if(activeCoachId===coachId)renderDetail(coachId);
 }
-function updNote(id,val){const cl=clients.find(c=>c.id===id);if(cl)cl.notes=val;}
-function delClient(id){if(!confirm('Supprimer ce client ?'))return;clients=clients.filter(c=>c.id!==id);renderDetail(activeCoachId);renderDash();}
+function updNote(id,val){
+  const cl=clients.find(c=>c.id===id);if(cl){cl.notes=val;saveData();}
+}
+function delClient(id, fromManage=false){
+  if(!confirm('Supprimer ce client ?'))return;
+  clients=clients.filter(c=>c.id!==id);
+  saveData();
+  if(fromManage){closeModal();openModal('manageData');}
+  else{renderDetail(activeCoachId);renderDash();}
+}
+function delCoach(id){
+  if(!confirm('Supprimer ce coach et tous ses clients ?'))return;
+  coaches=coaches.filter(c=>c.id!==id);
+  clients=clients.filter(c=>c.coachId!==id);
+  delete targets[id];
+  saveData();
+  closeModal();
+  renderDash();
+}
+function resetAll(){
+  if(!confirm('⚠️ Tout supprimer ? Cette action est irréversible.'))return;
+  coaches=[...DEFAULT_COACHES];clients=[];targets={...DEFAULT_TARGETS};nid=300;
+  saveData();closeModal();renderDash();
+}
 
 function renderDash(){
   const g=gstat(),rens=renewals();
@@ -397,8 +503,7 @@ function renderDetail(coachId){
   </div>
   <div class="kg" style="grid-template-columns:repeat(4,1fr)">
     ${kpi("👥","Clients",s.cc,"",co.color)}${kpi("✅","Faites",s.done,`/ ${s.tot}`,"#10B981")}${kpi("⏳","Restantes",s.left,"","#EF4444")}${kpi("💰","CA",s.rev.toLocaleString(),"","#3B82F6")}
-  </div>
-  ${rnBanner(rens)}`;
+  </div>${rnBanner(rens)}`;
 
   if(!cs.length){
     html+=`<div style="text-align:center;padding:48px 20px;border:2px dashed var(--bd);border-radius:14px;background:var(--w)"><div style="font-size:42px;margin-bottom:10px">👤</div><div style="font-weight:700;font-size:16px;margin-bottom:6px">Aucun client</div><div style="font-size:13px;color:var(--t2);margin-bottom:16px">Ajoutez votre premier client</div><button onclick="openModal('addClient',${co.id})" style="background:${co.color};color:#fff;border:none;border-radius:9px;padding:10px 22px;font-weight:700;font-size:14px;cursor:pointer">+ Ajouter un client</button></div>`;
@@ -425,7 +530,7 @@ function renderDetail(coachId){
             <button class="ab" style="background:${tc};color:#fff" onclick="openModal('addSession',${co.id},${cl.id})">+ Séance</button>
             <button class="ab" style="background:transparent;color:${tc};border:1.5px solid ${tc}44" onclick="openModal('history',${co.id},${cl.id})">📋 Historique (${done})</button>
           </div>
-          <input style="width:100%;border:1.5px solid var(--bd);border-radius:8px;padding:8px 11px;font-size:13px;background:var(--w);color:var(--t);outline:none" value="${cl.notes||''}" placeholder="Notes, objectifs..." onchange="updNote(${cl.id},this.value)" onfocus="this.style.borderColor='${tc}55'" onblur="this.style.borderColor='var(--bd)'">
+          <input style="width:100%;border:1.5px solid var(--bd);border-radius:8px;padding:8px 11px;font-size:13px;background:var(--w);color:var(--t);outline:none" value="${cl.notes||''}" placeholder="Notes, objectifs..." onchange="updNote(${cl.id},this.value)">
         </div></div>`;
     });
   }
@@ -466,7 +571,6 @@ function renderClients(){
 }
 
 function renderReport(){
-  const g=gstat();
   let html=`<div class="card"><div class="ch">📋 Rapport par coach</div><div style="overflow-x:auto;padding:4px">
   <table style="width:100%;border-collapse:collapse;font-size:13px">
   <thead><tr>${["Coach","Clients","Faites","Restantes","Taux","CA Réalisé","Objectif","Progression"].map(h=>`<th style="padding:9px 12px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--t3);font-weight:700;border-bottom:2px solid var(--bd)">${h}</th>`).join('')}</tr></thead><tbody>`;
@@ -503,34 +607,8 @@ function goDetail(id){
   renderDetail(id);
 }
 
-// ── PASSWORD GATE ──
-const PASS = "OvillagePT"; // ← change this to your password
-
-function checkPass() {
-  const v = document.getElementById('pass-inp').value;
-  if(v === PASS) {
-    document.getElementById('gate').style.display = 'none';
-    document.getElementById('app-wrap').style.display = 'block';
-    localStorage.setItem('fpk_auth', PASS);
-  } else {
-    const err = document.getElementById('pass-err');
-    err.style.display = 'block';
-    document.getElementById('pass-inp').style.borderColor = '#EF4444';
-    setTimeout(()=>{ err.style.display='none'; document.getElementById('pass-inp').style.borderColor='#E5E7EB'; }, 2500);
-  }
-}
-
-// Check if already authenticated
-if(localStorage.getItem('fpk_auth') === PASS) {
-  document.getElementById('gate').style.display = 'none';
-  document.getElementById('app-wrap').style.display = 'block';
-}
-
-document.getElementById('pass-inp').addEventListener('keydown', e => {
-  if(e.key === 'Enter') checkPass();
-});
-
-renderDash();
+// Init
+if(localStorage.getItem('fpk_auth')===PASS) renderDash();
 </script>
 </body>
 </html>

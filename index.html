@@ -72,6 +72,22 @@ footer{text-align:center;padding:20px;font-size:10px;color:var(--t3);letter-spac
 </head>
 <body>
 
+<!-- PASSWORD GATE -->
+<div id="gate" style="position:fixed;inset:0;background:#F8F9FC;display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;">
+  <div style="background:#fff;border-radius:20px;padding:40px 36px;width:100%;max-width:360px;box-shadow:0 8px 40px rgba(0,0,0,0.12);border:1px solid #E5E7EB;text-align:center;">
+    <div style="font-size:42px;margin-bottom:12px;">🏋️</div>
+    <div style="font-size:22px;font-weight:800;color:#111827;letter-spacing:-0.02em;">FPK <span style="color:#6C63FF;">O'VILLAGE</span></div>
+    <div style="font-size:13px;color:#6B7280;margin-top:6px;margin-bottom:28px;font-weight:500;">Accès réservé — Entrez le mot de passe</div>
+    <input id="pass-inp" type="password" placeholder="Mot de passe..." style="width:100%;box-sizing:border-box;border:1.5px solid #E5E7EB;border-radius:10px;padding:12px 16px;font-size:15px;outline:none;color:#111827;margin-bottom:10px;text-align:center;letter-spacing:0.1em;">
+    <div id="pass-err" style="display:none;font-size:12px;color:#EF4444;font-weight:600;margin-bottom:10px;">❌ Mot de passe incorrect</div>
+    <button onclick="checkPass()" style="width:100%;background:#6C63FF;color:#fff;border:none;border-radius:10px;padding:13px;font-weight:800;font-size:15px;cursor:pointer;letter-spacing:0.03em;">ACCÉDER →</button>
+    <div style="font-size:10px;color:#9CA3AF;margin-top:20px;letter-spacing:0.05em;">FPK O'VILLAGE © 2025 · Système de gestion interne</div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app-wrap" style="display:none;">
+
 <nav>
   <div class="logo">FPK <span>O'VILLAGE</span></div>
   <button class="nbtn" style="background:var(--p);color:#fff" onclick="openModal('addCoach')">+ Coach</button>
@@ -91,6 +107,7 @@ footer{text-align:center;padding:20px;font-size:10px;color:var(--t3);letter-spac
 <div id="report" class="page"></div>
 <div id="coachDetail" class="page"></div>
 <div id="modal-root"></div>
+</div><!-- end app-wrap -->
 
 <script>
 const CARNETS={c1:{name:"1 séance PT",sessions:1,price:300,type:"SOLO"},c2:{name:"10 séances PT",sessions:10,price:2000,type:"SOLO"},c3:{name:"10 séances DUO PT",sessions:10,price:3000,type:"DUO"},c4:{name:"10 séances DUO Premium",sessions:10,price:4500,type:"DUO"},c5:{name:"10 séances Fight",sessions:10,price:2500,type:"FIGHT"},c6:{name:"10 séances Premium",sessions:10,price:3000,type:"PREMIUM"},c7:{name:"10 séances Premium+",sessions:10,price:4000,type:"PREMIUM"},c8:{name:"15 séances PT+1",sessions:16,price:3000,type:"SOLO"},c9:{name:"15 séances DUO Prem.",sessions:15,price:6500,type:"DUO"},c10:{name:"15 séances Premium",sessions:15,price:4500,type:"PREMIUM"},c11:{name:"15 séances DUO",sessions:15,price:4500,type:"DUO"},c12:{name:"20 séances PT+2",sessions:22,price:4000,type:"SOLO"},c13:{name:"20 séances DUO Prem.",sessions:20,price:7500,type:"DUO"},c14:{name:"20 séances Premium",sessions:20,price:6000,type:"PREMIUM"},c15:{name:"20 séances DUO",sessions:20,price:6000,type:"DUO"},c16:{name:"Small Groupe",sessions:1,price:750,type:"GROUPE"}};
@@ -485,6 +502,33 @@ function goDetail(id){
   document.getElementById('coachDetail').classList.add('active');
   renderDetail(id);
 }
+
+// ── PASSWORD GATE ──
+const PASS = "OvillagePT"; // ← change this to your password
+
+function checkPass() {
+  const v = document.getElementById('pass-inp').value;
+  if(v === PASS) {
+    document.getElementById('gate').style.display = 'none';
+    document.getElementById('app-wrap').style.display = 'block';
+    localStorage.setItem('fpk_auth', PASS);
+  } else {
+    const err = document.getElementById('pass-err');
+    err.style.display = 'block';
+    document.getElementById('pass-inp').style.borderColor = '#EF4444';
+    setTimeout(()=>{ err.style.display='none'; document.getElementById('pass-inp').style.borderColor='#E5E7EB'; }, 2500);
+  }
+}
+
+// Check if already authenticated
+if(localStorage.getItem('fpk_auth') === PASS) {
+  document.getElementById('gate').style.display = 'none';
+  document.getElementById('app-wrap').style.display = 'block';
+}
+
+document.getElementById('pass-inp').addEventListener('keydown', e => {
+  if(e.key === 'Enter') checkPass();
+});
 
 renderDash();
 </script>
